@@ -1,29 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useContext } from 'react'
+import CreateProduct from './components/CreateProduct'
+import Modal from './components/Modal'
 import Product from './components/Product'
+import { ModalContext } from './context/ModalContext'
+import useProducts from './hooks/useProducts'
 import Iproduct from './interface'
 
 function App() {
-  const [data, setData] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorFetch, seterrorFetch] = useState('')
-
-  async function fetchData() {
-    try {
-      setIsLoading(true)
-      const response = await fetch('https://fakestoreapi.com/products?limit=5')
-      const data = await response.json()
-      setData(data)
-      setIsLoading(false)
-    } catch (e: any) {
-      setIsLoading(false)
-      seterrorFetch(e.message)
-    }
+  const { errorFetch, data, isLoading, addProduct } = useProducts()
+  const { modal, open, close } = useContext(ModalContext)
+  const handleCreate = (prod: Iproduct) => {
+    addProduct(prod)
+    close()
   }
-  useEffect(() => {
-    fetchData()
-  }, [])
   return (
     <div className="container mx-auto max-w-2xl pt-5">
+      <button
+        onClick={open}
+        className="hover:text-white py-3 px-5 border bg-yellow-400 fixed right-5 bottom-5 rounded-full"
+      >
+        +
+      </button>
       {errorFetch && (
         <div className="text-center text-5xl font-bold text-red-600">
           {errorFetch}
@@ -32,10 +29,15 @@ function App() {
       {isLoading && (
         <div className="text-center text-5xl font-bold">Loading...</div>
       )}
-      {data.length &&
+      {!!data.length &&
         data.map((product: Iproduct) => (
           <Product product={product} key={product.id} />
         ))}
+      {modal && (
+        <Modal title="Create New Product" onClose={close}>
+          <CreateProduct onCreate={handleCreate} />
+        </Modal>
+      )}
     </div>
   )
 }
